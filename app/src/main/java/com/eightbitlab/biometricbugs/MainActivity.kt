@@ -12,6 +12,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        //FIXME please remove if (savedInstanceState == null) check to see a different leak
         if (savedInstanceState == null) {
             BiometricPrompt(this, ContextCompat.getMainExecutor(this),
                 object : BiometricPrompt.AuthenticationCallback() {
