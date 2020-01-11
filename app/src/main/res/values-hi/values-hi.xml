@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string msgid="6241458715391513061" name="accessibility_fingerprint_dialog_help_area">"सहायता का मैसेज दिखाने की जगह"</string>
+    <string msgid="4296851028928624518" name="confirm_device_credential_password">"पासवर्ड का इस्तेमाल करें"</string>
+    <string msgid="7497355367608150274" name="default_error_msg">"अनजान गड़बड़ी"</string>
+    <string msgid="5354590751262189738" name="fingerprint_dialog_touch_sensor">"फ़िंगरप्रिंट सेंसर को छुएं"</string>
+    <string msgid="3976825677335166260" name="fingerprint_error_hw_not_available">"फ़िंगरप्रिंट हार्डवेयर मौजूद नहीं है."</string>
+    <string msgid="1176237289575184578" name="fingerprint_error_hw_not_present">"इस डिवाइस में फ़िंगरप्रिंट सेंसर नहीं है"</string>
+    <string msgid="1651062876313169162" name="fingerprint_error_lockout">"कई बार कोशिश की जा चुकी है. कृपया बाद में फिर से कोशिश करें."</string>
+    <string msgid="3350805046152877040" name="fingerprint_error_no_fingerprints">"कोई फ़िंगरप्रिंट रजिस्टर नहीं किया गया है."</string>
+    <string msgid="3421037373085129417" name="fingerprint_error_user_canceled">"उपयोगकर्ता ने फिंगरप्रिंट की पुष्टि की कार्रवाई रद्द कर दी है."</string>
+    <string msgid="5491287833813257925" name="fingerprint_not_recognized">"पहचान नहीं हो पाई"</string>
+    <string msgid="7474799539658018076" name="generic_error_user_canceled">"उपयोगकर्ता ने पुष्टि करने की प्रक्रिया रद्द की."</string>
+</resources>

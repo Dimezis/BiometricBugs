@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="crypto_fingerprint_fallback_prefixes">
+        <item>SM-G95</item> <!-- Samsung Galaxy S8/S8+ -->
+        <item>SM-G96</item> <!-- Samsung Galaxy S9/S9+ -->
+        <item>SM-G97</item> <!-- Samsung Galaxy S10/S10+ -->
+        <item>SM-N95</item> <!-- Samsung Galaxy Note 8 -->
+        <item>SM-N96</item> <!-- Samsung Galaxy Note 9 -->
+        <item>SM-N97</item> <!-- Samsung Galaxy Note 10/10+ -->
+        <item>SM-A20</item> <!-- Samsung Galaxy A20/A20e -->
+    </string-array>
+    <string-array name="crypto_fingerprint_fallback_vendors">
+        <item>samsung</item>
+    </string-array>
+    <string-array name="hide_fingerprint_instantly_prefixes">
+        <!-- Samsung Galaxy S10/S10+ -->
+        <item>SM-G97</item>
+        <item>SC-03L</item>
+        <item>SC-04L</item>
+        <item>SC-05L</item>
+        <item>SCV41</item>
+        <item>SCV42</item>
+
+        <!-- Samsung Galaxy Note 10/10+ -->
+        <item>SM-N97</item>
+        <item>SC-01M</item>
+        <item>SCV45</item>
+    </string-array>
+    <color name="biometric_error_color">#ff5722</color>
+    <dimen name="fingerprint_icon_size">64dp</dimen>
+    <string name="accessibility_fingerprint_dialog_help_area">Help message area</string>
+    <string name="confirm_device_credential_password">Use password</string>
+    <string name="default_error_msg">Unknown error</string>
+    <string name="fingerprint_dialog_touch_sensor">Touch the fingerprint sensor</string>
+    <string name="fingerprint_error_hw_not_available">Fingerprint hardware not available.</string>
+    <string name="fingerprint_error_hw_not_present">This device does not have a fingerprint sensor</string>
+    <string name="fingerprint_error_lockout">Too many attempts. Please try again later.</string>
+    <string name="fingerprint_error_no_fingerprints">No fingerprints enrolled.</string>
+    <string name="fingerprint_error_user_canceled">Fingerprint operation canceled by user.</string>
+    <string name="fingerprint_not_recognized">Not recognized</string>
+    <string name="generic_error_user_canceled">Authentication canceled by user.</string>
+    <style name="DeviceCredentialHandlerTheme" parent="Theme.AppCompat">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+    <style name="TransparentStyle">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+</resources>

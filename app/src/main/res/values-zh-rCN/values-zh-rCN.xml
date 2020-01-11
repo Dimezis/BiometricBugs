@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string msgid="6241458715391513061" name="accessibility_fingerprint_dialog_help_area">"帮助消息区域"</string>
+    <string msgid="4296851028928624518" name="confirm_device_credential_password">"使用密码"</string>
+    <string msgid="7497355367608150274" name="default_error_msg">"未知错误"</string>
+    <string msgid="5354590751262189738" name="fingerprint_dialog_touch_sensor">"请轻触指纹传感器"</string>
+    <string msgid="3976825677335166260" name="fingerprint_error_hw_not_available">"指纹硬件无法使用。"</string>
+    <string msgid="1176237289575184578" name="fingerprint_error_hw_not_present">"此设备没有指纹传感器"</string>
+    <string msgid="1651062876313169162" name="fingerprint_error_lockout">"尝试次数过多，请稍后重试。"</string>
+    <string msgid="3350805046152877040" name="fingerprint_error_no_fingerprints">"未注册任何指纹。"</string>
+    <string msgid="3421037373085129417" name="fingerprint_error_user_canceled">"用户取消了指纹操作。"</string>
+    <string msgid="5491287833813257925" name="fingerprint_not_recognized">"无法识别"</string>
+    <string msgid="7474799539658018076" name="generic_error_user_canceled">"用户已取消身份验证。"</string>
+</resources>
