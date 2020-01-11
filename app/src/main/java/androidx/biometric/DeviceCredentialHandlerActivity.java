@@ -26,6 +26,8 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.eightbitlab.biometricbugs.R;
+
 /**
  * Transparent activity that is responsible for re-launching the {@link BiometricPrompt} and
  * handling results from {@link android.app.KeyguardManager#createConfirmDeviceCredentialIntent(

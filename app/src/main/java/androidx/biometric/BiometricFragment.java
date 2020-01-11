@@ -38,6 +38,8 @@ import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
+import com.eightbitlab.biometricbugs.R;
+
 import java.util.concurrent.Executor;
 
 /**

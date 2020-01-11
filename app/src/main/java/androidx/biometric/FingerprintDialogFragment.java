@@ -44,6 +44,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 
+import com.eightbitlab.biometricbugs.R;
+
 /**
  * This class implements a custom AlertDialog that prompts the user for fingerprint authentication.
  * This class is not meant to be preserved across process death; for security reasons, the

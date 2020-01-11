@@ -30,6 +30,8 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.fragment.app.FragmentActivity;
 
+import com.eightbitlab.biometricbugs.R;
+
 /**
  * @hide
  */
