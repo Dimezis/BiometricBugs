@@ -811,28 +811,8 @@ public class BiometricPrompt implements BiometricConstants {
         if (canUseBiometricFragment() && mBiometricFragment != null) {
             mBiometricFragment.cancel();
 
-            // If we launched a device credential handler activity, also clean up its fragment.
-            if (!mIsHandlingDeviceCredential) {
-                final DeviceCredentialHandlerBridge bridge =
-                        DeviceCredentialHandlerBridge.getInstanceIfNotNull();
-                if (bridge != null && bridge.getBiometricFragment() != null) {
-                    bridge.getBiometricFragment().cancel();
-                }
-            }
-        } else {
             if (mFingerprintHelperFragment != null && mFingerprintDialogFragment != null) {
                 dismissFingerprintFragments(mFingerprintDialogFragment, mFingerprintHelperFragment);
-            }
-
-            // If we launched a device credential handler activity, also clean up its fragment.
-            if (!mIsHandlingDeviceCredential) {
-                final DeviceCredentialHandlerBridge bridge =
-                        DeviceCredentialHandlerBridge.getInstanceIfNotNull();
-                if (bridge != null && bridge.getFingerprintDialogFragment() != null
-                        && bridge.getFingerprintHelperFragment() != null) {
-                    dismissFingerprintFragments(bridge.getFingerprintDialogFragment(),
-                            bridge.getFingerprintHelperFragment());
-                }
             }
         }
     }
@@ -876,26 +856,24 @@ public class BiometricPrompt implements BiometricConstants {
         }
 
         final DeviceCredentialHandlerBridge bridge = DeviceCredentialHandlerBridge.getInstance();
-        if (mIsHandlingDeviceCredential) {
-            if (canUseBiometricFragment() && mBiometricFragment != null) {
-                bridge.setBiometricFragment(mBiometricFragment);
-            } else if (mFingerprintDialogFragment != null && mFingerprintHelperFragment != null) {
-                bridge.setFingerprintFragments(mFingerprintDialogFragment,
-                        mFingerprintHelperFragment);
-            }
-        } else {
-            // If hosted by the client, register the current activity theme to the bridge.
-            final FragmentActivity activity = getActivity();
-            if (activity != null) {
-                try {
-                    bridge.setClientThemeResId(activity.getPackageManager().getActivityInfo(
-                            activity.getComponentName(), 0).getThemeResource());
-                } catch (PackageManager.NameNotFoundException e) {
-                    Log.e(TAG, "Failed to register client theme to bridge", e);
-                }
+        final FragmentActivity activity = getActivity();
+        if (activity != null) {
+            try {
+                bridge.setClientThemeResId(activity.getPackageManager().getActivityInfo(
+                        activity.getComponentName(), 0).getThemeResource());
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.e(TAG, "Failed to register client theme to bridge", e);
             }
         }
-        bridge.setCallbacks(mExecutor, mNegativeButtonListener, mAuthenticationCallback);
+
+        bridge.setCallbacks(mExecutor, mAuthenticationCallback);
+        if (mBiometricFragment != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            mBiometricFragment.setCallbacks(mExecutor, mNegativeButtonListener, mAuthenticationCallback);
+        } else if (mFingerprintDialogFragment != null && mFingerprintHelperFragment != null) {
+            mFingerprintDialogFragment.setNegativeButtonListener(mNegativeButtonListener);
+            mFingerprintHelperFragment.setCallback(mExecutor, mAuthenticationCallback);
+            mFingerprintHelperFragment.setHandler(mFingerprintDialogFragment.getHandler());
+        }
 
         if (startIgnoringReset) {
             bridge.startIgnoringReset();

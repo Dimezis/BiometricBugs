@@ -44,19 +44,7 @@ public class DeviceCredentialHandlerBridge {
     private int mClientThemeResId;
 
     @Nullable
-    private BiometricFragment mBiometricFragment;
-
-    @Nullable
-    private FingerprintDialogFragment mFingerprintDialogFragment;
-
-    @Nullable
-    private FingerprintHelperFragment mFingerprintHelperFragment;
-
-    @Nullable
     private Executor mExecutor;
-
-    @Nullable
-    private DialogInterface.OnClickListener mOnClickListener;
 
     @Nullable
     private BiometricPrompt.AuthenticationCallback mAuthenticationCallback;
@@ -118,82 +106,22 @@ public class DeviceCredentialHandlerBridge {
     }
 
     /**
-     * Registers a {@link BiometricFragment} to the bridge. This will automatically receive new
-     * callbacks set by {@link #setCallbacks(Executor, DialogInterface.OnClickListener,
-     * BiometricPrompt.AuthenticationCallback)}.
-     */
-    void setBiometricFragment(@Nullable BiometricFragment biometricFragment) {
-        mBiometricFragment = biometricFragment;
-    }
-
-    /** @return See {@link #setBiometricFragment(BiometricFragment)}. */
-    @Nullable
-    BiometricFragment getBiometricFragment() {
-        return mBiometricFragment;
-    }
-
-    /**
-     * Registers a {@link FingerprintDialogFragment} and {@link FingerprintHelperFragment} to the
-     * bridge. These will automatically receive new callbacks set by {@link #setCallbacks(Executor,
-     * DialogInterface.OnClickListener, BiometricPrompt.AuthenticationCallback)}.
-     */
-    void setFingerprintFragments(@Nullable FingerprintDialogFragment fingerprintDialogFragment,
-            @Nullable FingerprintHelperFragment fingerprintHelperFragment) {
-        mFingerprintDialogFragment = fingerprintDialogFragment;
-        mFingerprintHelperFragment = fingerprintHelperFragment;
-    }
-
-    /**
-     * @return The latest {@link FingerprintDialogFragment} set via
-     * {@link #setFingerprintFragments(FingerprintDialogFragment, FingerprintHelperFragment)}.
-     */
-    @Nullable
-    public FingerprintDialogFragment getFingerprintDialogFragment() {
-        return mFingerprintDialogFragment;
-    }
-
-    /**
-     * @return The latest {@link FingerprintHelperFragment} set via
-     * {@link #setFingerprintFragments(FingerprintDialogFragment, FingerprintHelperFragment)}.
-     */
-    @Nullable
-    public FingerprintHelperFragment getFingerprintHelperFragment() {
-        return mFingerprintHelperFragment;
-    }
-
-    /**
-     * Registers dialog and authentication callbacks to the bridge, along with an executor that can
+     * Registers authentication callbacks to the bridge, along with an executor that can
      * be used to run them.
      *
-     * <p>If a {@link BiometricFragment} has been registered via
-     * {@link #setBiometricFragment(BiometricFragment)}, or if a {@link FingerprintDialogFragment}
-     * and {@link FingerprintHelperFragment} have been registered via
-     * {@link #setFingerprintFragments(FingerprintDialogFragment, FingerprintHelperFragment)}, then
-     * these fragments will receive the updated executor and callbacks as well.
-     *
      * @param executor               An executor that can be used to run callbacks.
-     * @param onClickListener        A dialog button listener for a biometric prompt.
      * @param authenticationCallback A handler for various biometric prompt authentication events.
      */
     @SuppressLint("LambdaLast")
     void setCallbacks(@NonNull Executor executor,
-            @NonNull DialogInterface.OnClickListener onClickListener,
             @NonNull BiometricPrompt.AuthenticationCallback authenticationCallback) {
         mExecutor = executor;
-        mOnClickListener = onClickListener;
         mAuthenticationCallback = authenticationCallback;
-        if (mBiometricFragment != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            mBiometricFragment.setCallbacks(executor, onClickListener, authenticationCallback);
-        } else if (mFingerprintDialogFragment != null && mFingerprintHelperFragment != null) {
-            mFingerprintDialogFragment.setNegativeButtonListener(onClickListener);
-            mFingerprintHelperFragment.setCallback(executor, authenticationCallback);
-            mFingerprintHelperFragment.setHandler(mFingerprintDialogFragment.getHandler());
-        }
     }
 
     /**
      * @return The latest {@link Executor} set via {@link #setCallbacks(Executor,
-     * DialogInterface.OnClickListener, BiometricPrompt.AuthenticationCallback)}.
+     * BiometricPrompt.AuthenticationCallback)}.
      */
     @Nullable
     Executor getExecutor() {
@@ -201,17 +129,8 @@ public class DeviceCredentialHandlerBridge {
     }
 
     /**
-     * @return The latest {@link DialogInterface.OnClickListener} set via {@link #setCallbacks(
-     * Executor, DialogInterface.OnClickListener, BiometricPrompt.AuthenticationCallback)}.
-     */
-    @Nullable
-    DialogInterface.OnClickListener getOnClickListener() {
-        return mOnClickListener;
-    }
-
-    /**
      * @return The latest {@link BiometricPrompt.AuthenticationCallback} set via
-     * {@link #setCallbacks(Executor, DialogInterface.OnClickListener,
+     * {@link #setCallbacks(Executor,
      * BiometricPrompt.AuthenticationCallback)}.
      */
     @Nullable
@@ -290,11 +209,7 @@ public class DeviceCredentialHandlerBridge {
         }
 
         mClientThemeResId = 0;
-        mBiometricFragment = null;
-        mFingerprintDialogFragment = null;
-        mFingerprintHelperFragment = null;
         mExecutor = null;
-        mOnClickListener = null;
         mAuthenticationCallback = null;
         mDeviceCredentialResult = RESULT_NONE;
         mConfirmingDeviceCredential = false;
