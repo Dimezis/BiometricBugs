@@ -246,7 +246,7 @@ public class FingerprintHelperFragment extends Fragment {
             mCancellationSignal = new CancellationSignal();
             mCanceledFrom = USER_CANCELED_FROM_NONE;
             androidx.core.hardware.fingerprint.FingerprintManagerCompat fingerprintManagerCompat =
-                    androidx.core.hardware.fingerprint.FingerprintManagerCompat.from(requireContext());
+                    androidx.core.hardware.fingerprint.FingerprintManagerCompat.from(requireContext().getApplicationContext());
             if (handlePreAuthenticationErrors(fingerprintManagerCompat)) {
                 mMessageRouter.sendMessage(FingerprintDialogFragment.MSG_DISMISS_DIALOG_ERROR);
                 cleanup();
