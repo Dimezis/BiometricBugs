@@ -44,9 +44,14 @@ abstract class AuthenticationEvent {
         }
     }
 
-    //Marker of a terminal state
-    static final class Complete extends AuthenticationEvent {
-        Complete() {
+    static final class Cancel extends AuthenticationEvent {
+        Cancel() {
+        }
+    }
+
+    //Marker of a consumed event
+    static final class Consumed extends AuthenticationEvent {
+        Consumed() {
         }
     }
 }

@@ -33,9 +33,7 @@ import androidx.core.os.CancellationSignal;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
 
 import com.eightbitlab.biometricbugs.R;
 
@@ -270,24 +268,7 @@ public class FingerprintHelperFragment extends Fragment {
     }
 
     LiveData<AuthenticationEvent> getAuthenticationEvents() {
-        MediatorLiveData<AuthenticationEvent> terminalEventMediator = new MediatorLiveData<>();
-
-        //MediatorLiveData makes sure that if onChanged is called, there's a consumer that
-        //received the event. If it's one of terminal events (Success/Error), we clear the LiveData
-        //cache so we don't repeat it next time the observer subscribes
-        terminalEventMediator.addSource(authenticationEvents, new Observer<AuthenticationEvent>() {
-            @Override
-            public void onChanged(AuthenticationEvent authenticationEvent) {
-                terminalEventMediator.setValue(authenticationEvent);
-                boolean terminalEvent = authenticationEvent instanceof AuthenticationEvent.Success ||
-                        authenticationEvent instanceof AuthenticationEvent.Error;
-
-                if (terminalEvent) {
-                    authenticationEvents.setValue(new AuthenticationEvent.Complete());
-                }
-            }
-        });
-        return terminalEventMediator;
+        return LiveDataExtensions.toConsumableEvents(authenticationEvents);
     }
 
     /**

@@ -35,6 +35,7 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.OnLifecycleEvent;
 
@@ -538,8 +539,8 @@ public class BiometricPrompt implements BiometricConstants {
                 Log.v(TAG, "BiometricFragment: " + biometricFragment);
             }
             if (canUseBiometricFragment() && biometricFragment != null) {
-                biometricFragment.setCallbacks(mExecutor, mNegativeButtonListener,
-                        mAuthenticationCallback);
+                biometricFragment.setCallbacks(mExecutor
+                );
             } else {
                 fingerprintDialog = getFingerprintDialogFragment();
                 fingerprintHelper = getFingerprintHelperFragment();
@@ -722,8 +723,8 @@ public class BiometricPrompt implements BiometricConstants {
             } else {
                 biometricFragment = BiometricFragment.newInstance();
             }
-            biometricFragment.setCallbacks(mExecutor, mNegativeButtonListener,
-                    mAuthenticationCallback);
+            biometricFragment.setCallbacks(mExecutor);
+            observeAuthenticationResults(biometricFragment.getAuthenticationEvents());
 
             // Set the crypto object.
             biometricFragment.setCryptoObject(crypto);
@@ -771,7 +772,7 @@ public class BiometricPrompt implements BiometricConstants {
             }
 
             fingerprintHelper.setExecutor(mExecutor);
-            observeAuthenticationResults(fingerprintDialog, fingerprintHelper);
+            observeAuthenticationResults(fingerprintHelper.getAuthenticationEvents());
             final Handler fingerprintDialogHandler = fingerprintDialog.getHandler();
             fingerprintHelper.setHandler(fingerprintDialogHandler);
             fingerprintHelper.setCryptoObject(crypto);
@@ -797,9 +798,8 @@ public class BiometricPrompt implements BiometricConstants {
         fragmentManager.executePendingTransactions();
     }
 
-    private void observeAuthenticationResults(FingerprintDialogFragment fingerprintDialog,
-                                              FingerprintHelperFragment fingerprintHelper) {
-        fingerprintHelper.getAuthenticationEvents().observe(fingerprintDialog, new Observer<AuthenticationEvent>() {
+    private void observeAuthenticationResults(LiveData<AuthenticationEvent> events) {
+        events.observe(getActivity(), new Observer<AuthenticationEvent>() {
             @Override
             public void onChanged(AuthenticationEvent authenticationEvent) {
                 if (authenticationEvent instanceof AuthenticationEvent.Success) {
@@ -810,6 +810,8 @@ public class BiometricPrompt implements BiometricConstants {
                     mAuthenticationCallback.onAuthenticationError(result.getErrorCode(), result.getErrorMessage());
                 } else if (authenticationEvent instanceof AuthenticationEvent.Failure) {
                     mAuthenticationCallback.onAuthenticationFailed();
+                } else if (authenticationEvent instanceof AuthenticationEvent.Cancel) {
+                    mNegativeButtonListener.onClick(null, 0);
                 }
             }
         });
@@ -892,7 +894,7 @@ public class BiometricPrompt implements BiometricConstants {
         BiometricFragment biometricFragment = getBiometricFragment();
 
         if (biometricFragment != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            biometricFragment.setCallbacks(mExecutor, mNegativeButtonListener, mAuthenticationCallback);
+            biometricFragment.setCallbacks(mExecutor);
         } else if (fingerprintDialog != null && fingerprintHelper != null) {
             fingerprintDialog.setNegativeButtonListener(mNegativeButtonListener);
             fingerprintHelper.setExecutor(mExecutor);
