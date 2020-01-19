@@ -99,31 +99,48 @@ public class FingerprintDialogFragment extends DialogFragment {
         return fragment;
     }
 
-    final class H extends Handler {
+    static final class H extends Handler {
+
+        @Nullable
+        private FingerprintDialogFragment receiver;
+
+        H() {
+        }
+
+        void onResume(@NonNull FingerprintDialogFragment fragment) {
+            this.receiver = fragment;
+        }
+
+        void onPause() {
+            this.receiver = null;
+        }
+
         @Override
         public void handleMessage(android.os.Message msg) {
-            Context context = getContext();
-            if (context == null) {
+            if (receiver == null || receiver.getContext() == null) {
+                Log.e(TAG, "Received a message when was detached: " + msg.what);
                 return;
             }
+            Context context = receiver.getContext();
+
             switch (msg.what) {
                 case MSG_SHOW_HELP:
-                    handleShowHelp((CharSequence) msg.obj, context);
+                    receiver.handleShowHelp((CharSequence) msg.obj, context);
                     break;
                 case MSG_SHOW_ERROR:
-                    handleShowError((CharSequence) msg.obj, context);
+                    receiver.handleShowError((CharSequence) msg.obj, context);
                     break;
                 case MSG_DISMISS_DIALOG_ERROR:
-                    handleDismissDialogError((CharSequence) msg.obj, context);
+                    receiver.handleDismissDialogError((CharSequence) msg.obj, context);
                     break;
                 case MSG_DISMISS_DIALOG_AUTHENTICATED:
-                    dismissSafely();
+                    receiver.dismissSafely();
                     break;
                 case MSG_RESET_MESSAGE:
-                    handleResetMessage(context);
+                    receiver.handleResetMessage(context);
                     break;
                 case DISPLAYED_FOR_500_MS:
-                    mDismissInstantly = Utils.shouldHideFingerprintDialog(context, Build.MODEL);
+                    receiver.handleDismissWithDelay(context);
                     break;
             }
         }
@@ -257,6 +274,7 @@ public class FingerprintDialogFragment extends DialogFragment {
     @Override
     public void onResume() {
         super.onResume();
+        mHandler.onResume(this);
         mLastState = STATE_NONE;
         updateFingerprintIcon(STATE_FINGERPRINT, requireContext());
     }
@@ -266,6 +284,7 @@ public class FingerprintDialogFragment extends DialogFragment {
         super.onPause();
         // Remove everything since the fragment is going away.
         mHandler.removeCallbacksAndMessages(null);
+        mHandler.onPause();
     }
 
     @Override
@@ -469,5 +488,9 @@ public class FingerprintDialogFragment extends DialogFragment {
             mErrorText.setTextColor(mTextColor);
             mErrorText.setText(context.getString(R.string.fingerprint_dialog_touch_sensor));
         }
+    }
+
+    private void handleDismissWithDelay(@NonNull Context context) {
+        mDismissInstantly = Utils.shouldHideFingerprintDialog(context, Build.MODEL);
     }
 }
