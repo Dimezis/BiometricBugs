@@ -283,6 +283,7 @@ public class BiometricFragment extends Fragment {
                 mHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
+                        // Ugh...
                         // Hack almost over 9000, ignore cancel signal if it's within the first
                         // quarter second.
                         mStartRespectingCancel = true;
