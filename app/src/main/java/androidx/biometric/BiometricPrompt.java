@@ -724,7 +724,7 @@ public class BiometricPrompt implements BiometricConstants {
                 biometricFragment = BiometricFragment.newInstance();
             }
             biometricFragment.setCallbacks(mExecutor);
-            observeAuthenticationResults(biometricFragment.getAuthenticationEvents());
+            observeAuthenticationResults(biometricFragment.getAuthenticationEvents(), activity);
 
             // Set the crypto object.
             biometricFragment.setCryptoObject(crypto);
@@ -772,7 +772,7 @@ public class BiometricPrompt implements BiometricConstants {
             }
 
             fingerprintHelper.setExecutor(mExecutor);
-            observeAuthenticationResults(fingerprintHelper.getAuthenticationEvents());
+            observeAuthenticationResults(fingerprintHelper.getAuthenticationEvents(), activity);
             final Handler fingerprintDialogHandler = fingerprintDialog.getHandler();
             fingerprintHelper.setHandler(fingerprintDialogHandler);
             fingerprintHelper.setCryptoObject(crypto);
@@ -798,8 +798,8 @@ public class BiometricPrompt implements BiometricConstants {
         fragmentManager.executePendingTransactions();
     }
 
-    private void observeAuthenticationResults(LiveData<AuthenticationEvent> events) {
-        events.observe(getActivity(), new Observer<AuthenticationEvent>() {
+    private void observeAuthenticationResults(@NonNull LiveData<AuthenticationEvent> events, @NonNull FragmentActivity activity) {
+        events.observe(activity, new Observer<AuthenticationEvent>() {
             @Override
             public void onChanged(AuthenticationEvent authenticationEvent) {
                 if (authenticationEvent instanceof AuthenticationEvent.Success) {
