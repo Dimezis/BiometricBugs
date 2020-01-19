@@ -35,6 +35,7 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.OnLifecycleEvent;
 
 import com.eightbitlab.biometricbugs.R;
@@ -551,7 +552,7 @@ public class BiometricPrompt implements BiometricConstants {
                     mFingerprintDialogFragment.setNegativeButtonListener(mNegativeButtonListener);
                 }
                 if (mFingerprintHelperFragment != null) {
-                    mFingerprintHelperFragment.setCallback(mExecutor, mAuthenticationCallback);
+                    mFingerprintHelperFragment.setExecutor(mExecutor);
                     if (mFingerprintDialogFragment != null) {
                         mFingerprintHelperFragment.setHandler(
                                 mFingerprintDialogFragment.getHandler());
@@ -773,7 +774,8 @@ public class BiometricPrompt implements BiometricConstants {
                 mFingerprintHelperFragment = FingerprintHelperFragment.newInstance();
             }
 
-            mFingerprintHelperFragment.setCallback(mExecutor, mAuthenticationCallback);
+            mFingerprintHelperFragment.setExecutor(mExecutor);
+            observeAuthenticationResults();
             final Handler fingerprintDialogHandler = mFingerprintDialogFragment.getHandler();
             mFingerprintHelperFragment.setHandler(fingerprintDialogHandler);
             mFingerprintHelperFragment.setCryptoObject(crypto);
@@ -797,6 +799,23 @@ public class BiometricPrompt implements BiometricConstants {
         // For the case when onResume() is being called right after authenticate,
         // we need to make sure that all fragment transactions have been committed.
         fragmentManager.executePendingTransactions();
+    }
+
+    private void observeAuthenticationResults() {
+        mFingerprintHelperFragment.getAuthenticationEvents().observe(mFingerprintDialogFragment, new Observer<AuthenticationEvent>() {
+            @Override
+            public void onChanged(AuthenticationEvent authenticationEvent) {
+                if (authenticationEvent instanceof AuthenticationEvent.Success) {
+                    AuthenticationResult result = ((AuthenticationEvent.Success) authenticationEvent).getResult();
+                    mAuthenticationCallback.onAuthenticationSucceeded(result);
+                } else if (authenticationEvent instanceof AuthenticationEvent.Error) {
+                    AuthenticationEvent.Error result = (AuthenticationEvent.Error) authenticationEvent;
+                    mAuthenticationCallback.onAuthenticationError(result.getErrorCode(), result.getErrorMessage());
+                } else if (authenticationEvent instanceof AuthenticationEvent.Failure) {
+                    mAuthenticationCallback.onAuthenticationFailed();
+                }
+            }
+        });
     }
 
     /**
@@ -871,7 +890,7 @@ public class BiometricPrompt implements BiometricConstants {
             mBiometricFragment.setCallbacks(mExecutor, mNegativeButtonListener, mAuthenticationCallback);
         } else if (mFingerprintDialogFragment != null && mFingerprintHelperFragment != null) {
             mFingerprintDialogFragment.setNegativeButtonListener(mNegativeButtonListener);
-            mFingerprintHelperFragment.setCallback(mExecutor, mAuthenticationCallback);
+            mFingerprintHelperFragment.setExecutor(mExecutor);
             mFingerprintHelperFragment.setHandler(mFingerprintDialogFragment.getHandler());
         }
 

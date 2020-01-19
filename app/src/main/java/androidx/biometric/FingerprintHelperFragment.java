@@ -32,6 +32,10 @@ import androidx.annotation.VisibleForTesting;
 import androidx.core.os.CancellationSignal;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 
 import com.eightbitlab.biometricbugs.R;
 
@@ -89,8 +93,6 @@ public class FingerprintHelperFragment extends Fragment {
     // Re-set by the application, through BiometricPromptCompat upon orientation changes.
     @VisibleForTesting
     Executor mExecutor;
-    @VisibleForTesting
-    BiometricPrompt.AuthenticationCallback mClientAuthenticationCallback;
 
     // Re-set by BiometricPromptCompat upon orientation changes. This handler is used to send
     // messages from the AuthenticationCallbacks to the UI.
@@ -102,6 +104,7 @@ public class FingerprintHelperFragment extends Fragment {
 
     private int mCanceledFrom;
     private CancellationSignal mCancellationSignal;
+    private MutableLiveData<AuthenticationEvent> authenticationEvents = new MutableLiveData<>();
 
     // Also created once and retained.
     @VisibleForTesting
@@ -119,8 +122,7 @@ public class FingerprintHelperFragment extends Fragment {
                                 new Runnable() {
                                     @Override
                                     public void run() {
-                                        mClientAuthenticationCallback
-                                                .onAuthenticationError(errMsgId, errString);
+                                        authenticationEvents.setValue(new AuthenticationEvent.Error(errMsgId, errString));
                                     }
                                 });
                     }
@@ -196,7 +198,7 @@ public class FingerprintHelperFragment extends Fragment {
                     mExecutor.execute(new Runnable() {
                         @Override
                         public void run() {
-                            mClientAuthenticationCallback.onAuthenticationSucceeded(promptResult);
+                            authenticationEvents.setValue(new AuthenticationEvent.Success(promptResult));
                         }
                     });
 
@@ -210,7 +212,7 @@ public class FingerprintHelperFragment extends Fragment {
                     mExecutor.execute(new Runnable() {
                         @Override
                         public void run() {
-                            mClientAuthenticationCallback.onAuthenticationFailed();
+                            authenticationEvents.setValue(new AuthenticationEvent.Failure());
                         }
                     });
                 }
@@ -263,14 +265,29 @@ public class FingerprintHelperFragment extends Fragment {
         return super.onCreateView(inflater, container, savedInstanceState);
     }
 
-    /**
-     * Sets the client's callback. This should be done whenever the lifecycle changes (orientation
-     * changes).
-     */
-    void setCallback(Executor executor,
-            BiometricPrompt.AuthenticationCallback callback) {
+    void setExecutor(Executor executor) {
         mExecutor = executor;
-        mClientAuthenticationCallback = callback;
+    }
+
+    LiveData<AuthenticationEvent> getAuthenticationEvents() {
+        MediatorLiveData<AuthenticationEvent> terminalEventMediator = new MediatorLiveData<>();
+
+        //MediatorLiveData makes sure that if onChanged is called, there's a consumer that
+        //received the event. If it's one of terminal events (Success/Error), we clear the LiveData
+        //cache so we don't repeat it next time the observer subscribes
+        terminalEventMediator.addSource(authenticationEvents, new Observer<AuthenticationEvent>() {
+            @Override
+            public void onChanged(AuthenticationEvent authenticationEvent) {
+                terminalEventMediator.setValue(authenticationEvent);
+                boolean terminalEvent = authenticationEvent instanceof AuthenticationEvent.Success ||
+                        authenticationEvent instanceof AuthenticationEvent.Error;
+
+                if (terminalEvent) {
+                    authenticationEvents.setValue(new AuthenticationEvent.Complete());
+                }
+            }
+        });
+        return terminalEventMediator;
     }
 
     /**
@@ -343,7 +360,7 @@ public class FingerprintHelperFragment extends Fragment {
      */
     private void sendErrorToClient(final int error) {
         if (!Utils.isConfirmingDeviceCredential()) {
-            mClientAuthenticationCallback.onAuthenticationError(error, getErrorString(error));
+            authenticationEvents.setValue(new AuthenticationEvent.Error(error, getErrorString(error)));
         }
     }
 
