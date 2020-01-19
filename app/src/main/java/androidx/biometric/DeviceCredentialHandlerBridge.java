@@ -179,6 +179,7 @@ public class DeviceCredentialHandlerBridge {
      * Indicates that the bridge should ignore all subsequent calls to {@link #reset} until
      * {@link #stopIgnoringReset()} is called.
      */
+    //Ugh...
     void startIgnoringReset() {
         mIgnoreResetState = IGNORING_RESET;
     }
