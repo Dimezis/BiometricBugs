@@ -89,6 +89,7 @@ public class DeviceCredentialHandlerActivity extends AppCompatActivity {
         super.onPause();
 
         // Prevent the client from resetting the bridge in onPause if just changing configuration.
+        // JUST configuration change. lol
         final DeviceCredentialHandlerBridge bridge =
                 DeviceCredentialHandlerBridge.getInstanceIfNotNull();
         if (isChangingConfigurations() && bridge != null) {

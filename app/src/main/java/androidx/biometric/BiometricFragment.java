@@ -17,7 +17,6 @@
 package androidx.biometric;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
@@ -37,6 +36,8 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.eightbitlab.biometricbugs.R;
 
@@ -57,19 +58,12 @@ public class BiometricFragment extends Fragment {
 
     private static final String TAG = "BiometricFragment";
 
-    // Re-set in onAttach
-    private Context mContext;
-
     // Set whenever the support library's authenticate is called.
     private Bundle mBundle;
 
     // Re-set by the application, through BiometricPromptCompat upon orientation changes.
     @VisibleForTesting
     Executor mClientExecutor;
-    @VisibleForTesting
-    DialogInterface.OnClickListener mClientNegativeButtonListener;
-    @VisibleForTesting
-    BiometricPrompt.AuthenticationCallback mClientAuthenticationCallback;
 
     // Set once and retained.
     private BiometricPrompt.CryptoObject mCryptoObject;
@@ -82,6 +76,7 @@ public class BiometricFragment extends Fragment {
     private boolean mStartRespectingCancel;
 
     // Do not rely on the application's executor when calling into the framework's code.
+    //TODO amazing, so why do you guys rely on it in FingerprintHelperFragment?
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private final Executor mExecutor = new Executor() {
         @Override
@@ -89,6 +84,7 @@ public class BiometricFragment extends Fragment {
             mHandler.post(runnable);
         }
     };
+    private MutableLiveData<AuthenticationEvent> authenticationEvents = new MutableLiveData<>();
 
     // Also created once and retained.
     @VisibleForTesting
@@ -104,12 +100,12 @@ public class BiometricFragment extends Fragment {
                             public void run() {
                                 CharSequence error = errString;
                                 if (error == null) {
-                                    error = mContext.getString(R.string.default_error_msg) + " "
-                                            + errorCode;
+                                    error = getContext() != null ? getString(R.string.default_error_msg) + " "
+                                            + errorCode : "";
                                 }
-                                mClientAuthenticationCallback
-                                        .onAuthenticationError(Utils.isUnknownError(errorCode)
-                                                ? BiometricPrompt.ERROR_VENDOR : errorCode, error);
+
+                                authenticationEvents.setValue(new AuthenticationEvent.Error(Utils.isUnknownError(errorCode)
+                                        ? BiometricPrompt.ERROR_VENDOR : errorCode, error));
                             }
                         });
                         cleanup();
@@ -139,8 +135,7 @@ public class BiometricFragment extends Fragment {
                             new Runnable() {
                                 @Override
                                 public void run() {
-                                    mClientAuthenticationCallback.onAuthenticationSucceeded(
-                                            promptResult);
+                                    authenticationEvents.setValue(new AuthenticationEvent.Success(promptResult));
                                 }
                             });
                     cleanup();
@@ -151,7 +146,7 @@ public class BiometricFragment extends Fragment {
                     mClientExecutor.execute(new Runnable() {
                         @Override
                         public void run() {
-                            mClientAuthenticationCallback.onAuthenticationFailed();
+                            authenticationEvents.setValue(new AuthenticationEvent.Failure());
                         }
                     });
                 }
@@ -162,7 +157,7 @@ public class BiometricFragment extends Fragment {
             new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    mClientNegativeButtonListener.onClick(dialog, which);
+                    authenticationEvents.setValue(new AuthenticationEvent.Cancel());
                 }
             };
 
@@ -185,15 +180,8 @@ public class BiometricFragment extends Fragment {
         return new BiometricFragment();
     }
 
-    /**
-     * Sets the client's callback. This should be done whenever the lifecycle changes (orientation
-     * changes).
-     */
-    void setCallbacks(Executor executor, DialogInterface.OnClickListener onClickListener,
-            BiometricPrompt.AuthenticationCallback authenticationCallback) {
+    void setCallbacks(Executor executor) {
         mClientExecutor = executor;
-        mClientNegativeButtonListener = onClickListener;
-        mClientAuthenticationCallback = authenticationCallback;
     }
 
     /**
@@ -252,10 +240,8 @@ public class BiometricFragment extends Fragment {
                 && mBundle.getBoolean(BiometricPrompt.KEY_ALLOW_DEVICE_CREDENTIAL, false);
     }
 
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        mContext = context;
+    LiveData<AuthenticationEvent> getAuthenticationEvents() {
+        return LiveDataExtensions.toConsumableEvents(authenticationEvents);
     }
 
     @Override
@@ -267,7 +253,7 @@ public class BiometricFragment extends Fragment {
             mNegativeButtonText = mBundle.getCharSequence(BiometricPrompt.KEY_NEGATIVE_TEXT);
 
             final android.hardware.biometrics.BiometricPrompt.Builder builder =
-                    new android.hardware.biometrics.BiometricPrompt.Builder(getContext());
+                    new android.hardware.biometrics.BiometricPrompt.Builder(getContext().getApplicationContext());
             builder.setTitle(mBundle.getCharSequence(BiometricPrompt.KEY_TITLE))
                     .setSubtitle(mBundle.getCharSequence(BiometricPrompt.KEY_SUBTITLE))
                     .setDescription(mBundle.getCharSequence(BiometricPrompt.KEY_DESCRIPTION));
@@ -297,6 +283,7 @@ public class BiometricFragment extends Fragment {
                 mHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
+                        // Ugh...
                         // Hack almost over 9000, ignore cancel signal if it's within the first
                         // quarter second.
                         mStartRespectingCancel = true;

@@ -88,7 +88,7 @@ public class BiometricManager {
     /** @return A {@link BiometricManager} instance with the provided context. */
     @NonNull
     public static BiometricManager from(@NonNull Context context) {
-        return new BiometricManager(context);
+        return new BiometricManager(context.getApplicationContext());
     }
 
     @SuppressWarnings("deprecation")

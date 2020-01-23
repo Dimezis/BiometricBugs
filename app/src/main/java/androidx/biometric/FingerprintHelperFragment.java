@@ -32,6 +32,8 @@ import androidx.annotation.VisibleForTesting;
 import androidx.core.os.CancellationSignal;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.eightbitlab.biometricbugs.R;
 
@@ -89,8 +91,6 @@ public class FingerprintHelperFragment extends Fragment {
     // Re-set by the application, through BiometricPromptCompat upon orientation changes.
     @VisibleForTesting
     Executor mExecutor;
-    @VisibleForTesting
-    BiometricPrompt.AuthenticationCallback mClientAuthenticationCallback;
 
     // Re-set by BiometricPromptCompat upon orientation changes. This handler is used to send
     // messages from the AuthenticationCallbacks to the UI.
@@ -100,10 +100,9 @@ public class FingerprintHelperFragment extends Fragment {
     private boolean mShowing;
     private BiometricPrompt.CryptoObject mCryptoObject;
 
-    // Created once and retained.
-    private Context mContext;
     private int mCanceledFrom;
     private CancellationSignal mCancellationSignal;
+    private MutableLiveData<AuthenticationEvent> authenticationEvents = new MutableLiveData<>();
 
     // Also created once and retained.
     @VisibleForTesting
@@ -121,8 +120,7 @@ public class FingerprintHelperFragment extends Fragment {
                                 new Runnable() {
                                     @Override
                                     public void run() {
-                                        mClientAuthenticationCallback
-                                                .onAuthenticationError(errMsgId, errString);
+                                        authenticationEvents.setValue(new AuthenticationEvent.Error(errMsgId, errString));
                                     }
                                 });
                     }
@@ -149,8 +147,9 @@ public class FingerprintHelperFragment extends Fragment {
                             dialogErrString = errString;
                         } else {
                             Log.e(TAG, "Got null string for error message: " + errMsgId);
-                            dialogErrString = mContext.getResources().getString(
-                                    R.string.default_error_msg);
+                            Context context = getContext();
+                            dialogErrString = context != null ?
+                                    getString(R.string.default_error_msg) : "";
                         }
 
                         // Ensure we're only sending publicly defined errors.
@@ -197,7 +196,7 @@ public class FingerprintHelperFragment extends Fragment {
                     mExecutor.execute(new Runnable() {
                         @Override
                         public void run() {
-                            mClientAuthenticationCallback.onAuthenticationSucceeded(promptResult);
+                            authenticationEvents.setValue(new AuthenticationEvent.Success(promptResult));
                         }
                     });
 
@@ -207,11 +206,11 @@ public class FingerprintHelperFragment extends Fragment {
                 @Override
                 public void onAuthenticationFailed() {
                     mMessageRouter.sendMessage(FingerprintDialogFragment.MSG_SHOW_HELP,
-                            mContext.getResources().getString(R.string.fingerprint_not_recognized));
+                            getContext() != null ? getString(R.string.fingerprint_not_recognized) : "");
                     mExecutor.execute(new Runnable() {
                         @Override
                         public void run() {
-                            mClientAuthenticationCallback.onAuthenticationFailed();
+                            authenticationEvents.setValue(new AuthenticationEvent.Failure());
                         }
                     });
                 }
@@ -236,7 +235,6 @@ public class FingerprintHelperFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        mContext = getContext();
     }
 
     @Override
@@ -248,7 +246,7 @@ public class FingerprintHelperFragment extends Fragment {
             mCancellationSignal = new CancellationSignal();
             mCanceledFrom = USER_CANCELED_FROM_NONE;
             androidx.core.hardware.fingerprint.FingerprintManagerCompat fingerprintManagerCompat =
-                    androidx.core.hardware.fingerprint.FingerprintManagerCompat.from(mContext);
+                    androidx.core.hardware.fingerprint.FingerprintManagerCompat.from(requireContext().getApplicationContext());
             if (handlePreAuthenticationErrors(fingerprintManagerCompat)) {
                 mMessageRouter.sendMessage(FingerprintDialogFragment.MSG_DISMISS_DIALOG_ERROR);
                 cleanup();
@@ -265,14 +263,12 @@ public class FingerprintHelperFragment extends Fragment {
         return super.onCreateView(inflater, container, savedInstanceState);
     }
 
-    /**
-     * Sets the client's callback. This should be done whenever the lifecycle changes (orientation
-     * changes).
-     */
-    void setCallback(Executor executor,
-            BiometricPrompt.AuthenticationCallback callback) {
+    void setExecutor(Executor executor) {
         mExecutor = executor;
-        mClientAuthenticationCallback = callback;
+    }
+
+    LiveData<AuthenticationEvent> getAuthenticationEvents() {
+        return LiveDataExtensions.toConsumableEvents(authenticationEvents);
     }
 
     /**
@@ -345,8 +341,7 @@ public class FingerprintHelperFragment extends Fragment {
      */
     private void sendErrorToClient(final int error) {
         if (!Utils.isConfirmingDeviceCredential()) {
-            mClientAuthenticationCallback.onAuthenticationError(error,
-                    getErrorString(mContext, error));
+            authenticationEvents.setValue(new AuthenticationEvent.Error(error, getErrorString(error)));
         }
     }
 
@@ -354,7 +349,12 @@ public class FingerprintHelperFragment extends Fragment {
      * Only needs to provide a subset of the fingerprint error strings since the rest are translated
      * in FingerprintManager
      */
-    private String getErrorString(Context context, int errorCode) {
+    private String getErrorString(int errorCode) {
+        Context context = getContext();
+        if (context == null) {
+            Log.e(TAG, "Trying to get a string after detaching the Context");
+            return "";
+        }
         switch (errorCode) {
             case BiometricPrompt.ERROR_HW_NOT_PRESENT:
                 return context.getString(R.string.fingerprint_error_hw_not_present);
